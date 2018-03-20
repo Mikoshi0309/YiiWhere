@@ -1,5 +1,10 @@
 <?php
-
+/**
+ * Created by PhpStorm.
+ * User: Miko
+ * Date: 3/20/18
+ * Time: 12:29 AM
+ */
 class WhereServer{
     public $str='';
     public function getWhereStr($arr){
