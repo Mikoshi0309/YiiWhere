@@ -17,7 +17,7 @@ class WhereServer{
         if(is_array($arr)){
            $this->arr2str($arr);
         }
-        return substr($this->str,0,-4);
+        return substr(substr($this->str,0,-4),1,-2);
     }
 
     private function arr2str($arr,$type='and'){
@@ -82,8 +82,8 @@ class WhereServer{
         
 }
 
-$arr = ["and",'platform_id'=>'asdasd',"platform_id=1",["between", "status", 1, 3],['or',[">=", "platform_id", 1],["between", "status", 1, 3],['and',["like", "platform_id", 1],["between", "status", 1, 3]]],["and", ["not in", "platform_id", [1,2,3,4]],["between", "status", 1, 3]]];
-//$arr = ['platform_id'=>1,'platform_ids'=>2];
+$arr = ["and",'platform_id'=>'asdasd',"platform_id=1",["between", "status", 1, 3],['or',[">=", "platform_id", 1],["between", "status", 1, 3],['and',["like", "platform_id", 1],["between", "status", 1, 3]],['or',[">=", "platform_id", 1],["between", "status", 1, 3]]],["and", ["not in", "platform_id", [1,2,3,4]],["between", "status", 1, 3]]];
+//$arr = ['platform_id'=>1,'platform_ids'=>1];
 $where = new WhereServer();
 echo $where->getWhereStr($arr);
 
