@@ -18,12 +18,11 @@ class WhereServer{
            $this->arr2str($arr);
         }
         return substr(substr($this->str,0,-4),1,-2);
+		//return substr($this->str,0,-4);
     }
 
     private function arr2str($arr,$type='and'){
-        if(!empty($type)){
-            $this->str .= '( ';
-        }
+        $this->str .= '( ';
         foreach ($arr as $k=>$v) {
 			if(!is_numeric($k)){
 				$this->CreateSql([$k=>$v],$type);
@@ -42,12 +41,10 @@ class WhereServer{
                 $this->CreateSql($v,$type);
             }
         }
-        if(!empty($type)){
-			$str_arr = explode(' ',$this->str);
-			$last_str = $str_arr[count($str_arr)-2];
-			$this->str = substr($this->str,0,-1*strlen($last_str)-1);
-            $this->str .= ' ) and ';
-        }
+		$str_arr = explode(' ',$this->str);
+		$last_str = $str_arr[count($str_arr)-2];
+		$this->str = substr($this->str,0,-1*strlen($last_str)-1);
+		$this->str .= ' ) and ';
 
     }
 
@@ -60,15 +57,16 @@ class WhereServer{
 				case 1:
 					$key = array_keys($arr);
 					$val = array_values($arr);
-					$this->str .= $key[0].' = "'.$val[0].'" '.$type.' ';
+					$this->str .= $key[0].' = \''.$val[0].'\' '.$type.' ';
 					break;
 				case 3:
 					if($arr[0] == 'in' || $arr[0] == 'not in'){
-						$this->str .= $arr[1].' '.$arr[0].' ( "'.implode('","',$arr[2]).'" ) '.$type.' ';
+						
+						$this->str .= $arr[1].' '.$arr[0].' ( \''.implode('\',\'',$arr[2]).'\' ) '.$type.' ';
 					}elseif($arr[0] == 'like'){
-						$this->str .= $arr[1].' '.$arr[0].' "%'.$arr[2].'%" '.$type.' ';
+						$this->str .= $arr[1].' '.$arr[0].' \'%'.$arr[2].'%\' '.$type.' ';
 					}else{
-						$this->str .= $arr[1].' '.$arr[0].' "'.$arr[2].'" '.$type.' ';
+						$this->str .= $arr[1].' '.$arr[0].' \''.$arr[2].'\' '.$type.' ';
 					}
 				
 					break;
@@ -82,7 +80,7 @@ class WhereServer{
         
 }
 
-$arr = ["and",'platform_id'=>'asdasd',"platform_id=1",["between", "status", 1, 3],['or',[">=", "platform_id", 1],["between", "status", 1, 3],['and',["like", "platform_id", 1],["between", "status", 1, 3]],['or',[">=", "platform_id", 1],["between", "status", 1, 3]]],["and", ["not in", "platform_id", [1,2,3,4]],["between", "status", 1, 3]]];
+$arr = ["and",'platform_id'=>1,"platform_id=1",["between", "status", 1, 3],['or',[">=", "platform_id", 1],["between", "status", 1, 3],['and',["like", "platform_id", 1],["between", "status", 1, 3]],['or',[">=", "platform_id", 1],["between", "status", 1, 3]]],["and", ["not in", "platform_id", [1,2,3,4]],["between", "status", 1, 3]]];
 //$arr = ['platform_id'=>1,'platform_ids'=>1];
 $where = new WhereServer();
 echo $where->getWhereStr($arr);
