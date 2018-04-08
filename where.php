@@ -15,73 +15,93 @@ class WhereServer{
             return $arr;
         }
         if(is_array($arr)){
-           $this->arr2str($arr);
+			return $this->arr2str($arr);
         }
-        return substr(substr($this->str,0,-4),1,-2);
-		//return substr($this->str,0,-4);
     }
 
-    private function arr2str($arr,$type='and'){
-        $this->str .= '( ';
-        foreach ($arr as $k=>$v) {
-			if(!is_numeric($k)){
-				$this->CreateSql([$k=>$v],$type);
-				continue;
+    private function arr2str($arr){
+        if (isset($arr[0])) {
+			if($arr[0] == 'and' || $arr[0] == 'or'){
+				$type = $arr[0];
+				 array_shift($arr);
+				return $this->buildAndCondition($type, $arr);
+			}else{
+				return $this->CreateSql($arr);
 			}
-		
-            if ($v == 'and' || $v == 'or') {
-                $filter = array_shift($arr);
-                $this->arr2str($arr,$filter);
-				break;
-            }elseif( $v[0] == 'and' || $v[0] == 'or'){
-				$filter = array_shift($v);
-                $this->arr2str($v,$filter);
-				continue;
-			} else {
-                $this->CreateSql($v,$type);
-            }
+        } else { 
+            return $this->CreateSql($arr);
         }
-		$str_arr = explode(' ',$this->str);
-		$last_str = $str_arr[count($str_arr)-2];
-		$this->str = substr($this->str,0,-1*strlen($last_str)-1);
-		$this->str .= ' ) and ';
 
     }
 
-    private function CreateSql($arr,$type=''){
+    private function CreateSql($arr){
 		if(is_string($arr)){
-			$this->str .= $arr.' '.$type.' ';
+			return $arr;
 		}else{
 			$count = count($arr);
 			switch ($count){
 				case 1:
 					$key = array_keys($arr);
 					$val = array_values($arr);
-					$this->str .= $key[0].' = \''.$val[0].'\' '.$type.' ';
+					return  $key[0].' = \''.$val[0].'\'';
 					break;
 				case 3:
 					if($arr[0] == 'in' || $arr[0] == 'not in'){
 						
-						$this->str .= $arr[1].' '.$arr[0].' ( \''.implode('\',\'',$arr[2]).'\' ) '.$type.' ';
+						return $arr[1].' '.$arr[0].' ( \''.implode('\',\'',$arr[2]).'\' ) ';
 					}elseif($arr[0] == 'like'){
-						$this->str .= $arr[1].' '.$arr[0].' \'%'.$arr[2].'%\' '.$type.' ';
+						return $arr[1].' '.$arr[0].' \'%'.$arr[2].'%\'';
 					}else{
-						$this->str .= $arr[1].' '.$arr[0].' \''.$arr[2].'\' '.$type.' ';
+						return $arr[1].' '.$arr[0].' \''.$arr[2].'\'';
 					}
 				
 					break;
 				case 4:
-					$this->str .= $arr[1].' '.$arr[0].' '.$arr[2].' and '.$arr[3].' '.$type.' ';
+					return $arr[1].' '.$arr[0].' '.$arr[2].' and '.$arr[3].'';
 					break;
 			}
 		}
 	}
-	
+	public function buildAndCondition($operator, $operands)
+    {
+        $parts = [];
+        foreach ($operands as $key=>$operand) {
+			if(!is_numeric($key)){
+				$operand = $this->arr2str([$key=>$operand]);
+			}
+            if (is_array($operand)) {
+                $operand = $this->arr2str($operand);
+            }
+           
+            if ($operand !== '') {
+                $parts[] = $operand;
+            }
+        }
+        if (!empty($parts)) {
+            return '(' . implode(") $operator (", $parts) . ')';
+        } else {
+            return '';
+        }
+    }
         
 }
 
-$arr = ["and",'platform_id'=>1,"platform_id=1",["between", "status", 1, 3],['or',[">=", "platform_id", 1],["between", "status", 1, 3],['and',["like", "platform_id", 1],["between", "status", 1, 3]],['or',[">=", "platform_id", 1],["between", "status", 1, 3]]],["and", ["not in", "platform_id", [1,2,3,4]],["between", "status", 1, 3]]];
+//$arr = ["and",'platform_id'=>1,"platform_id=1",["between", "status", 1, 3],['or',[">=", "platform_id", 1],["between", "status", 1, 3],['and',["like", "platform_id", 1],["between", "status", 1, 3]],['or',[">=", "platform_id", 1],["between", "status", 1, 3]]],["and", ["not in", "platform_id", [1,2,3,4]],["between", "status", 1, 3]]];
 //$arr = ['platform_id'=>1,'platform_ids'=>1];
+$arr = '["and", {
+			"user_id": 313
+		},
+		["or", ["and", ["in", "status", [1, 3, 4, 5]],
+				["<=", "created_at", 1517826431]
+			],
+			["and", {
+					"status": 2
+				},
+				[">=", "roll_out_time", 1517826431]
+			]
+		]
+	]';
+	$arr = json_decode($arr,true);
 $where = new WhereServer();
 echo $where->getWhereStr($arr);
 
